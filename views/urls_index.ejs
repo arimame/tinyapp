@@ -6,13 +6,17 @@
 <body>
 
 
- <!-- <h1><%= urls.b2xVn2 %></h1> -->
+<header>
+    <% include ../partials/_header %>
+</header>
+
 
  <ul>
-    <% urls.forEach(function(link) { %>
-        <li><%= link.URL %> - <%= link.tinyURL %></li>
-    <% }) %>
+    <% for (var key in urls) { %>
+        <li > <%= urls[key] %> - <%= key %>  </li>
+    <% } %>
 </ul>
+
 
 <h4><a href= "#">Make a tiny url</a></h4>
 
