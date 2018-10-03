@@ -1,12 +1,14 @@
 var express = require("express");
 var app = express();
 var PORT = 8080;
+var cookieParser = require('cookie-parser');
 
 app.set("view engine", "ejs");
 
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 
 
 function generateRandomString() {
@@ -17,8 +19,6 @@ function generateRandomString() {
   }
   return string;
 };
-
-
 
 
 var urlDatabase = {
@@ -40,6 +40,10 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username)
+  res.redirect("/urls");
+});
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
