@@ -14,8 +14,14 @@
  <ul>
     <% for (var key in urls) { %>
         <li > <%= urls[key] %> - <%= key %>  </li>
+        <!-- <form method="POST" action= <%= "/urls/" + key + "/delete"%>> -->
+          <form method="POST" action= "/urls/<%=key%>/delete">
+          <input type="submit" value="delete">
+        </form>
+
     <% } %>
 </ul>
+
 
 
 <h4><a href= "#">Make a tiny url</a></h4>
