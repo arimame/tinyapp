@@ -36,7 +36,7 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  let templateVars = {urls: urlDatabase};
+  let templateVars = {urls: urlDatabase, username: req.cookies["username"]};
   res.render("urls_index", templateVars);
 });
 
@@ -75,7 +75,7 @@ res.redirect("/urls");
 });
 
 app.get('/urls/:id', function(req, res) {
-  res.render('urls_shows', {tinyURL: req.params.id, URL: urlDatabase[req.params.id]});
+  res.render('urls_shows', {tinyURL: req.params.id, URL: urlDatabase[req.params.id], username: req.cookies["username"]});
 });
 
 
