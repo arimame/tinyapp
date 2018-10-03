@@ -11,16 +11,20 @@
 </header>
 
 
- <ul>
+ <ol>
     <% for (var key in urls) { %>
         <li > <%= urls[key] %> - <%= key %>  </li>
         <!-- <form method="POST" action= <%= "/urls/" + key + "/delete"%>> -->
-          <form method="POST" action= "/urls/<%=key%>/delete">
+          <form style="display: inline;" method="POST" action= "/urls/<%=key%>/delete">
           <input type="submit" value="delete">
         </form>
 
+        <form style="display: inline;" method="GET" action= "/urls/<%=key%>/edit">
+          <input type="submit" value="edit">
+        </form>
+        <p><br></p>
     <% } %>
-</ul>
+</ol>
 
 
 

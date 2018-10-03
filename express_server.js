@@ -60,6 +60,10 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
+app.get("/urls/:id/edit", (req, res) => {
+  res.redirect("/urls/" + req.params.id);
+});
+
 app.post("/urls/:id/change", (req, res) => { //changen URL
   urlDatabase[req.params.id] = req.body.longURL;
   //console.log("req", req.body.longURL);
