@@ -1,10 +1,22 @@
 <!-- views/partials/header.ejs -->
 <h1>Tiny App</h1>
 
-<h4>Hello <%=username%>!</h4>
+<% if (username === undefined) { %>
 
 <form action="/login" method="POST">
       <label for="username">Enter a URL:</label>
       <input id="username" type="text" name="username" placeholder="username" style="width: 300px">
       <input type="submit" value="Login">
     </form>
+
+
+<% } else { %>
+
+<h3 style="display: inline;">Hello <%=username%>!</h3>
+
+<form style="display: inline;" action="/logout" method="POST">
+<input type="submit" value="Logout">
+</form>
+
+<% } %>
+
