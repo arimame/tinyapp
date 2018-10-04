@@ -217,22 +217,35 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-//delete button removes url from hompage
+//DELETE button removes url from hompage
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  var userToken = req.cookies.user_id;
+  if (userToken === urlDatabase[req.params.id].userID) {
+      delete urlDatabase[req.params.id];
+      res.redirect("/urls");
+  } else {
+    res.status(403);
+    res.send("this is not your url");
+  }
+
 });
 
-//edit button redirects to unqiue tinyURL page, where user can change the URL
+//EDIT button redirects to unqiue tinyURL page, where user can change the URL
 app.get("/urls/:id/edit", (req, res) => {
   res.redirect("/urls/" + req.params.id);
 });
 
-//user can type new url and it will update it, and redirect to the homepage
+//EDIT user can type new url and it will update it, and redirect to the homepage
 app.post("/urls/:id/change", (req, res) => { //changen URL
-  urlDatabase[req.params.id].fullURL = req.body.longURL;
-  //console.log("req", req.body.longURL);
-res.redirect("/urls");
+  var userToken = req.cookies.user_id;
+  if (userToken === urlDatabase[req.params.id].userID) {
+    urlDatabase[req.params.id].fullURL = req.body.longURL;
+    res.redirect("/urls");
+  } else {
+    res.status(403);
+    res.send("this is not your url");
+  }
+
 });
 
 //displays the tiny url and full url when unique id is entered into
