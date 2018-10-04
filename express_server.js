@@ -2,6 +2,7 @@ var express = require("express");
 var app = express();
 var PORT = 8080;
 var cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 
 app.set("view engine", "ejs");
 
@@ -75,10 +76,22 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-//homepage, lists all urls with edit and delete button
+//MAINPAGE, lists all urls with edit and delete button
 app.get("/urls", (req, res) => {
+  var userLinks = {}
   var userToken = req.cookies.user_id;
-  let templateVars = {urls: urlDatabase, userObject: users[userToken].email}; //need to fix this to .email
+  function urlsForUser() {
+    for (var tiny in urlDatabase) {
+      if(userToken === urlDatabase[tiny].userID) {
+        userLinks[tiny] = {};
+        userLinks[tiny].fullURL = urlDatabase[tiny].fullURL;
+        userLinks[tiny].userID = urlDatabase[tiny].userID;
+      }
+    } return userLinks;
+  }
+  //var userToken = req.cookies.user_id;
+urlsForUser();
+  let templateVars = {urls: userLinks, userObject: users[userToken].email}; //need to fix this to .email
   //console.log(templateVars);
   res.render("urls_index", templateVars);
 });
@@ -213,7 +226,7 @@ app.post("/urls", (req, res) => {
 
 //when tinyURL is entered into the broswer, it will redirect to the full url
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].fullURL;
   res.redirect(longURL);
 });
 
