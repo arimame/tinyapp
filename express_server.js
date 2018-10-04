@@ -21,23 +21,49 @@ function generateRandomString() {
 };
 
 
-var urlDatabase = {
+/*var urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
   "jNxA7ju": "http://www.facebook.com"
 };
+*/
+
+var urlDatabase = {
+  "b2xVn2": {
+    fullURL: "http://www.lighthouselabs.ca",
+    userID: "a12b3d"
+  } ,
+  "9sm5xK": {
+    fullURL: "http://www.google.com",
+    userID: "123456"
+  },
+  "jNxA7ju": {
+    fullURL: "http://www.facebook.com",
+    userID: "abcdef"
+  },
+  "G29kx2": {
+    fullURL: "http://wwww.reddit.com",
+    userID: "a12b3d"
+  }
+};
 
 
 const users = {
-  "userRandomID": {
-    id: "userRandomID",
+  "abcdef": {
+    id: "abcdef",
     email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID",
+ "123456": {
+    id: "123456",
     email: "user2@example.com",
     password: "dishwasher-funk"
+  },
+  "a12b3d": {
+    id: "a12b3d",
+    email: "alissa.balge@gmail.com",
+    password: "1234"
+
   }
 }
 
@@ -170,6 +196,15 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
+app.post("/urls/new", (req, res) => {
+var userToken = req.cookies.user_id;
+var tiny = generateRandomString()
+urlDatabase[tiny] = {};
+urlDatabase[tiny].fullURL = req.body.longURL;
+urlDatabase[tiny].userID = userToken;
+console.log(urlDatabase);
+res.redirect("/urls/" + tiny);
+})
 
 app.post("/urls", (req, res) => {
   console.log(req.body);  // debug statement to see POST parameters
@@ -195,7 +230,7 @@ app.get("/urls/:id/edit", (req, res) => {
 
 //user can type new url and it will update it, and redirect to the homepage
 app.post("/urls/:id/change", (req, res) => { //changen URL
-  urlDatabase[req.params.id] = req.body.longURL;
+  urlDatabase[req.params.id].fullURL = req.body.longURL;
   //console.log("req", req.body.longURL);
 res.redirect("/urls");
 });
@@ -203,7 +238,7 @@ res.redirect("/urls");
 //displays the tiny url and full url when unique id is entered into
 app.get('/urls/:id', function(req, res) {
   var userToken = req.cookies.user_id;
-  res.render('urls_shows', {tinyURL: req.params.id, URL: urlDatabase[req.params.id], userObject:users[userToken].email}); //need to fix this to .email
+  res.render('urls_shows', {tinyURL: req.params.id, URL: urlDatabase[req.params.id].fullURL, userObject:users[userToken].email}); //need to fix this to .email
 });
 
 
