@@ -161,9 +161,13 @@ app.post("/register", (req, res) => {
 //page that allows a new url to be submitted
 app.get("/urls/new", (req, res) => {
   var userToken = req.cookies.user_id;
+  if (userToken === undefined) {
+    res.redirect("/login");
+  } else {
   let templateVars = {userObject: users[userToken].email}; //need to fix this to .email
-  console.log("this is new", templateVars);
+  //console.log("this is new", templateVars);
   res.render("urls_new", templateVars);
+  }
 });
 
 
