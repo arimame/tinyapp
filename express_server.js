@@ -1,15 +1,20 @@
 var express = require("express");
 var app = express();
 var PORT = 8080;
-var cookieParser = require('cookie-parser');
+//var cookieParser = require('cookie-parser');
+var cookieSession = require('cookie-session')
 const bcrypt = require('bcrypt');
 
 app.set("view engine", "ejs");
-
+app.set('trust proxy', 1);
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+//app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["key1","key2"]
+}))
 
 //creates random URL
 function generateRandomString() {
@@ -21,13 +26,6 @@ function generateRandomString() {
   return string;
 };
 
-
-/*var urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
-  "jNxA7ju": "http://www.facebook.com"
-};
-*/
 
 var urlDatabase = {
   "b2xVn2": {
@@ -79,7 +77,7 @@ app.get("/urls.json", (req, res) => {
 //MAINPAGE, lists all urls with edit and delete button
 app.get("/urls", (req, res) => {
   var userLinks = {}
-  var userToken = req.cookies.user_id;
+  var userToken = req.session.user_id;
   function urlsForUser() {
     for (var tiny in urlDatabase) {
       if(userToken === urlDatabase[tiny].userID) {
@@ -135,7 +133,7 @@ app.post("/login", (req, res) => {
       } else {
           for (var key in users) {
             if (users[key].email === req.body.email) {
-              res.cookie("user_id", key)
+              req.session.user_id = key;
               res.redirect("/urls");
             }
           }
@@ -152,7 +150,7 @@ app.post("/logout", (req, res) => {
 
 //registration page render
 app.get("/register", (req, res) => {
-var userToken = req.cookies.user_id;
+var userToken = req.session.user_id;
 let templateVars = {userObject: users[userToken]}; //need to fix this to .email???
   res.render("register", templateVars);
 });
@@ -160,7 +158,7 @@ let templateVars = {userObject: users[userToken]}; //need to fix this to .email?
 
 //login page render
 app.get("/login", (req, res) => {
-var userToken = req.cookies.user_id;
+var userToken = req.session.user_id;
 let templateVars = {userObject: users[userToken]}; //need to fix this to .email???
   res.render("login", templateVars);
 });
@@ -193,7 +191,7 @@ app.post("/register", (req, res) => {
     var hashedPassword = bcrypt.hashSync(password, 10);
     users[randomID].password = hashedPassword;
     console.log(users);
-    res.cookie("user_id", randomID)
+    req.session.user_id = randomID;
     res.redirect("/urls");
   }
 });
@@ -201,7 +199,7 @@ app.post("/register", (req, res) => {
 
 //page that allows a new url to be submitted
 app.get("/urls/new", (req, res) => {
-  var userToken = req.cookies.user_id;
+  var userToken = req.session.user_id;
   if (userToken === undefined) {
     res.redirect("/login");
   } else {
@@ -212,7 +210,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls/new", (req, res) => {
-var userToken = req.cookies.user_id;
+var userToken = req.session.user_id;
 var tiny = generateRandomString()
 urlDatabase[tiny] = {};
 urlDatabase[tiny].fullURL = req.body.longURL;
@@ -234,7 +232,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 //DELETE button removes url from hompage
 app.post("/urls/:id/delete", (req, res) => {
-  var userToken = req.cookies.user_id;
+  var userToken = req.session.user_id;
   if (userToken === urlDatabase[req.params.id].userID) {
       delete urlDatabase[req.params.id];
       res.redirect("/urls");
@@ -252,7 +250,7 @@ app.get("/urls/:id/edit", (req, res) => {
 
 //EDIT user can type new url and it will update it, and redirect to the homepage
 app.post("/urls/:id/change", (req, res) => { //changen URL
-  var userToken = req.cookies.user_id;
+  var userToken = req.session.user_id;
   if (userToken === urlDatabase[req.params.id].userID) {
     urlDatabase[req.params.id].fullURL = req.body.longURL;
     res.redirect("/urls");
@@ -265,7 +263,7 @@ app.post("/urls/:id/change", (req, res) => { //changen URL
 
 //displays the tiny url and full url when unique id is entered into
 app.get('/urls/:id', function(req, res) {
-  var userToken = req.cookies.user_id;
+  var userToken = req.session.user_id;
   res.render('urls_shows', {tinyURL: req.params.id, URL: urlDatabase[req.params.id].fullURL, userObject:users[userToken].email}); //need to fix this to .email
 });
 
