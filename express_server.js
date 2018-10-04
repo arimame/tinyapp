@@ -115,7 +115,7 @@ app.post("/login", (req, res) => {
      for (var info in users) {
       console.log("this the password saved ", users[info].password)
       console.log("this is my password ", req.body.password)
-      if (users[info].password === req.body.password) {
+      if (bcrypt.compareSync(req.body.password, users[info].password)) {
         match = true;
         return match;
      }
@@ -189,7 +189,9 @@ app.post("/register", (req, res) => {
     users[randomID]= {};
     users[randomID].id = randomID;
     users[randomID].email = req.body.email;
-    users[randomID].password = req.body.password;
+    var password = req.body.password;
+    var hashedPassword = bcrypt.hashSync(password, 10);
+    users[randomID].password = hashedPassword;
     console.log(users);
     res.cookie("user_id", randomID)
     res.redirect("/urls");
