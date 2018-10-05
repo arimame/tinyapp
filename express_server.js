@@ -104,7 +104,7 @@ app.get("/urls", (req, res) => {
   }
 });
 
-//LOGIN post
+//LOGIN post, your logs in with email and password
 app.post("/login", (req, res) => {
 //function checks for matching user email and password, it returns with the users userID
   function userAuth () {
@@ -125,7 +125,6 @@ app.post("/login", (req, res) => {
 
 //LOGOUT button
 app.post("/logout", (req, res) => {
-  //res.clearCookie("user_id");
   req.session = null;
   res.redirect("/login");
 });
@@ -208,18 +207,14 @@ app.post("/urls", (req, res) => {
   res.redirect("/urls/" + tiny);
 });
 
-// app.post("/urls", (req, res) => {
-//   console.log(req.body);
-//   res.send("Ok");
-// });
 
-//REDIRECT TO LONG URL, when tinyURL is entered into the broswer, it will redirect to the long url
+//REDIRECTS TO LONG URL, when tinyURL is entered into the broswer, it will redirect to the long url
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL].fullURL;
   res.redirect(longURL);
 });
 
-//DELETE button removes url from hompage
+//DELETE button removes url from /urls
 app.post("/urls/:id/delete", (req, res) => {
   var userToken = req.session.user_id;
   if (userToken === urlDatabase[req.params.id].userID) {
@@ -236,7 +231,7 @@ app.get("/urls/:id/edit", (req, res) => {
   res.redirect("/urls/" + req.params.id);
 });
 
-//EDIT user can type new url and it will update it, and redirect to the homepage
+//EDIT user can type new url and it will update it, and redirect to /urls
 app.post("/urls/:id", (req, res) => {
   var userToken = req.session.user_id;
   if (userToken === urlDatabase[req.params.id].userID) {
@@ -248,7 +243,7 @@ app.post("/urls/:id", (req, res) => {
   }
 });
 
-//ID, displays the tiny url and full url when unique id is entered into
+//ID, displays the tiny url and full url when unique id is entered into the browser
 app.get('/urls/:id', function(req, res) {
   var userToken = req.session.user_id;
    if (userToken === undefined) {
