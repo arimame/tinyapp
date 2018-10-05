@@ -1,19 +1,23 @@
 <!-- views/partials/header.ejs -->
 <h1>Welcome to Tiny App</h1>
 
-<% if (userObject === undefined) { %>
+<% if (userObject === undefined || userObject === "") { %>
 
 <p><a href="/login">Login</a> or <a href="/register">register for a new account</a></p>
 
 
 <% } else { %>
 
-<h3 style="display: inline;">Hello <%=userObject%>!</h3>
-
+<h3 style="display: inline;">You are signed in as <%=userObject%>! </h3>
 
 <form style="display: inline;" action="/logout" method="POST">
 <input type="submit" value="Logout">
 </form>
+
+<h4><i>You can check out your links <a href = "/urls"> here.</i></a></h4>
+
+
+
 
 
 <% } %>

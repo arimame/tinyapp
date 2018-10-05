@@ -13,7 +13,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 //app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
-  keys: ["key1","key2"]
+  keys: ["key1"]
 }))
 
 //creates random URL
@@ -51,23 +51,23 @@ const users = {
   "abcdef": {
     id: "abcdef",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "$2b$10$TQ3a7ZP303NCxQaAqgElv.ZldZLHVhloFPtPsFYaWQcGivmTh351i"
   },
  "123456": {
     id: "123456",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "$2b$10$szPv93KEanJAcaAnZqK8B.F0mUakbnpUlmV3DtViu2Wu2LR3j67Eq"
   },
   "a12b3d": {
     id: "a12b3d",
     email: "alissa.balge@gmail.com",
-    password: "1234"
+    password: "$2b$10$fU7JNvaGnxPzdCz/JYeBL.D4FXK3CZX3pp8QwvhSA3UXOUMtHuwm."
 
   }
 }
 
 app.get("/", (req, res) => {
-  res.send("<hmtl><body>hello <b>world</b></body></html>\n");
+  res.redirect("/login");
 });
 
 app.get("/urls.json", (req, res) => {
@@ -76,6 +76,10 @@ app.get("/urls.json", (req, res) => {
 
 //MAINPAGE, lists all urls with edit and delete button
 app.get("/urls", (req, res) => {
+  if (req.session.user_id === undefined ) {
+    res.status(403);
+    res.send("You are not logged in!");
+  } else {
   var userLinks = {}
   var userToken = req.session.user_id;
   function urlsForUser() {
@@ -92,66 +96,45 @@ urlsForUser();
   let templateVars = {urls: userLinks, userObject: users[userToken].email}; //need to fix this to .email
   //console.log(templateVars);
   res.render("urls_index", templateVars);
+}
 });
 
 //login form post
 app.post("/login", (req, res) => {
-  //res.cookie("user_id", randomID);
+//res.cookie("user_id", randomID);
 
-  function findUserEmail () {
-    var found = false;
-     for (var key in users) {
-      if (users[key].email === req.body.email) {
-        found = true;
-        return found;
-      }
+  function userAuth () {
+  for (var key in users) {
+    if((users[key].email === req.body.email) && (bcrypt.compareSync(req.body.password, users[key].password))) {
+      console.log("email", req.body.email);
+       console.log("email from database", users[key].email);
+        console.log("password", req.body.password);
+         console.log("password from database", users[key].password);
+      return key;
     }
-  };
+  }
+    res.status(403);
+    res.send("Email or wrong password");
+}
+  var foundUserID = userAuth();
+  console.log(foundUserID);
+  req.session.user_id = foundUserID;
+  res.redirect("/urls");
 
-  function findUserPassword () {
-    var match = false;
-     for (var info in users) {
-      console.log("this the password saved ", users[info].password)
-      console.log("this is my password ", req.body.password)
-      if (bcrypt.compareSync(req.body.password, users[info].password)) {
-        match = true;
-        return match;
-     }
-    }
-
-  };
-    var emailFound = findUserEmail();
-    var passwordFound = findUserPassword();
-
-    if (emailFound === false) {
-      es.status(403);
-      res.send("Email not found");
-    } else {
-      if (passwordFound === false) {
-        res.status(403);
-        res.send("Password does not match email");
-      } else {
-          for (var key in users) {
-            if (users[key].email === req.body.email) {
-              req.session.user_id = key;
-              res.redirect("/urls");
-            }
-          }
-        }
-      }
-  });
+});
 
 
 //logout button
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  //res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/login");
 });
 
 //registration page render
 app.get("/register", (req, res) => {
 var userToken = req.session.user_id;
-let templateVars = {userObject: users[userToken]}; //need to fix this to .email???
+let templateVars = {userObject: ""}; //need to fix this to .email???
   res.render("register", templateVars);
 });
 
@@ -159,7 +142,7 @@ let templateVars = {userObject: users[userToken]}; //need to fix this to .email?
 //login page render
 app.get("/login", (req, res) => {
 var userToken = req.session.user_id;
-let templateVars = {userObject: users[userToken]}; //need to fix this to .email???
+let templateVars = {userObject: ""}; //need to fix this to .email???
   res.render("login", templateVars);
 });
 
@@ -175,20 +158,23 @@ app.post("/register", (req, res) => {
       }
     }
   };
+
+
   var match = duplicateEmail();
+
   if (req.body.email === "" || req.body.password === "") {
     res.status(400);
     res.send('Please enter an email and password');
   } else if (match === true) {
       res.status(400);
-      res.send('Email is already register');
+      res.send('Email is already registered');
   } else {
     var randomID = generateRandomString();
     users[randomID]= {};
     users[randomID].id = randomID;
     users[randomID].email = req.body.email;
-    var password = req.body.password;
-    var hashedPassword = bcrypt.hashSync(password, 10);
+    var realPassword = req.body.password;
+    var hashedPassword = bcrypt.hashSync(realPassword, 10);
     users[randomID].password = hashedPassword;
     console.log(users);
     req.session.user_id = randomID;
@@ -271,3 +257,7 @@ app.get('/urls/:id', function(req, res) {
 app.listen(PORT, () => {
   console.log(`Tiny App listening on port ${PORT}!`)
 });
+
+console.log(bcrypt.hashSync("purple-monkey-dinosaur", 10))
+console.log(bcrypt.hashSync("dishwasher-funk", 10))
+console.log(bcrypt.hashSync("1234", 10))

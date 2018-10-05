@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
   <head></head>
-  <body style="font-size:20px; padding:50px;">
+  <body>
     <% include ../partials/_header %>
-    <form action="/urls/new" method="POST" style="margin:150px;">
-      <label for="longURL">Enter a URL:</label>
+
+    <form action="/urls/new" method="POST">
+      <label for="longURL">Enter a new Full URL and make it tiny!:</label>
       <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
       <input type="submit" value="Submit">
     </form>
+
+
   </body>
 </html>
