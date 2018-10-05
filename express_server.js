@@ -1,7 +1,6 @@
 var express = require("express");
 var app = express();
 var PORT = 8080;
-//var cookieParser = require('cookie-parser');
 var cookieSession = require('cookie-session')
 const bcrypt = require('bcrypt');
 
@@ -10,13 +9,13 @@ app.set('trust proxy', 1);
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
-//app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
   keys: ["key1"]
-}))
+}));
 
-//creates random URL
+
+//creates random URL and random userID
 function generateRandomString() {
   var string = "";
   var alphanumeric = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -26,7 +25,7 @@ function generateRandomString() {
   return string;
 };
 
-
+//Database of users
 var urlDatabase = {
   "b2xVn2": {
     fullURL: "http://www.lighthouselabs.ca",
@@ -46,7 +45,7 @@ var urlDatabase = {
   }
 };
 
-
+//Database of urls
 const users = {
   "abcdef": {
     id: "abcdef",
@@ -64,8 +63,9 @@ const users = {
     password: "$2b$10$fU7JNvaGnxPzdCz/JYeBL.D4FXK3CZX3pp8QwvhSA3UXOUMtHuwm."
 
   }
-}
+};
 
+//GET for /
 app.get("/", (req, res) => {
   if (req.session.user_id === undefined ) {
     res.redirect("/login");
@@ -73,6 +73,7 @@ app.get("/", (req, res) => {
     res.redirect("/urls");
   }
 });
+
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -82,10 +83,11 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   if (req.session.user_id === undefined ) {
     res.status(403);
-    res.send("You are not logged in!");
+    res.send("you are not logged in!");
   } else {
-  var userLinks = {}
+  var userLinks = {};
   var userToken = req.session.user_id;
+  //function returns users specific urls
   function urlsForUser() {
     for (var tiny in urlDatabase) {
       if(userToken === urlDatabase[tiny].userID) {
@@ -95,70 +97,63 @@ app.get("/urls", (req, res) => {
       }
     } return userLinks;
   }
-  //var userToken = req.cookies.user_id;
-urlsForUser();
-  let templateVars = {urls: userLinks, userObject: users[userToken].email}; //need to fix this to .email
-  //console.log(templateVars);
+  urlsForUser();
+  //page renders with user email and user links
+  let templateVars = {urls: userLinks, userObject: users[userToken].email};
   res.render("urls_index", templateVars);
-}
+  }
 });
 
-//login form post
+//LOGIN post
 app.post("/login", (req, res) => {
-//res.cookie("user_id", randomID);
-
+//function checks for matching user email and password, it returns with the users userID
   function userAuth () {
   for (var key in users) {
     if((users[key].email === req.body.email) && (bcrypt.compareSync(req.body.password, users[key].password))) {
-      console.log("email", req.body.email);
-       console.log("email from database", users[key].email);
-        console.log("password", req.body.password);
-         console.log("password from database", users[key].password);
       return key;
     }
   }
     res.status(403);
-    res.send("Email or wrong password");
+    res.send("wrong email or wrong password");
 }
   var foundUserID = userAuth();
-  console.log(foundUserID);
   req.session.user_id = foundUserID;
   res.redirect("/urls");
 
 });
 
 
-//logout button
+//LOGOUT button
 app.post("/logout", (req, res) => {
   //res.clearCookie("user_id");
   req.session = null;
   res.redirect("/login");
 });
 
-//registration page render
+//REGISTRATION page render
 app.get("/register", (req, res) => {
-if (req.session.user_id !== undefined ) {
+  if (req.session.user_id !== undefined ) {
     res.redirect("/urls");
   }
-var userToken = req.session.user_id;
-let templateVars = {userObject: ""}; //need to fix this to .email???
+  var userToken = req.session.user_id;
+  let templateVars = {userObject: ""};
   res.render("register", templateVars);
 });
 
 
-//login page render
+//LOGIN page render
 app.get("/login", (req, res) => {
   if (req.session.user_id !== undefined ) {
     res.redirect("/urls");
   }
-var userToken = req.session.user_id;
-let templateVars = {userObject: ""}; //need to fix this to .email???
+  var userToken = req.session.user_id;
+  let templateVars = {userObject: ""};
   res.render("login", templateVars);
 });
 
-//registration page submisson
+//REGISTRSTION page submisson
 app.post("/register", (req, res) => {
-
+//function checks for duplicate emails
  function duplicateEmail () {
     var match = false;
      for (var key in users) {
@@ -168,16 +163,16 @@ app.post("/register", (req, res) => {
       }
     }
   };
-
-
   var match = duplicateEmail();
-
+//checks if new user has entered a vaild email and password.
   if (req.body.email === "" || req.body.password === "") {
     res.status(400);
-    res.send('Please enter an email and password');
+    res.send('please enter an email AND password');
+  //returns error if there was an email match
   } else if (match === true) {
       res.status(400);
-      res.send('Email is already registered');
+      res.send('this email is already registered');
+  // if the registration info passes all the checks, a new account will be created.
   } else {
     var randomID = generateRandomString();
     users[randomID]= {};
@@ -186,41 +181,39 @@ app.post("/register", (req, res) => {
     var realPassword = req.body.password;
     var hashedPassword = bcrypt.hashSync(realPassword, 10);
     users[randomID].password = hashedPassword;
-    console.log(users);
     req.session.user_id = randomID;
     res.redirect("/urls");
   }
 });
 
 
-//page that allows a new url to be submitted
+//NEW URL, page that allows a new url to be submitted
 app.get("/urls/new", (req, res) => {
   var userToken = req.session.user_id;
   if (userToken === undefined) {
     res.redirect("/login");
   } else {
-  let templateVars = {userObject: users[userToken].email}; //need to fix this to .email
-  //console.log("this is new", templateVars);
+  let templateVars = {userObject: users[userToken].email};
   res.render("urls_new", templateVars);
   }
 });
 
+//CHANGES/UPDATES an exsiting tiny url by editing the long url
 app.post("/urls", (req, res) => {
-var userToken = req.session.user_id;
-var tiny = generateRandomString()
-urlDatabase[tiny] = {};
-urlDatabase[tiny].fullURL = req.body.longURL;
-urlDatabase[tiny].userID = userToken;
-console.log(urlDatabase);
-res.redirect("/urls/" + tiny);
-})
-
-app.post("/urls", (req, res) => {
-  console.log(req.body);  // debug statement to see POST parameters
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  var userToken = req.session.user_id;
+  var tiny = generateRandomString()
+  urlDatabase[tiny] = {};
+  urlDatabase[tiny].fullURL = req.body.longURL;
+  urlDatabase[tiny].userID = userToken;
+  res.redirect("/urls/" + tiny);
 });
 
-//when tinyURL is entered into the broswer, it will redirect to the full url
+// app.post("/urls", (req, res) => {
+//   console.log(req.body);
+//   res.send("Ok");
+// });
+
+//REDIRECT TO LONG URL, when tinyURL is entered into the broswer, it will redirect to the long url
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL].fullURL;
   res.redirect(longURL);
@@ -236,7 +229,6 @@ app.post("/urls/:id/delete", (req, res) => {
     res.status(403);
     res.send("this is not your url");
   }
-
 });
 
 //EDIT button redirects to unqiue tinyURL page, where user can change the URL
@@ -245,7 +237,7 @@ app.get("/urls/:id/edit", (req, res) => {
 });
 
 //EDIT user can type new url and it will update it, and redirect to the homepage
-app.post("/urls/:id", (req, res) => { //changen URL
+app.post("/urls/:id", (req, res) => {
   var userToken = req.session.user_id;
   if (userToken === urlDatabase[req.params.id].userID) {
     urlDatabase[req.params.id].fullURL = req.body.longURL;
@@ -254,17 +246,15 @@ app.post("/urls/:id", (req, res) => { //changen URL
     res.status(403);
     res.send("this is not your url");
   }
-
 });
 
-//displays the tiny url and full url when unique id is entered into
+//ID, displays the tiny url and full url when unique id is entered into
 app.get('/urls/:id', function(req, res) {
   var userToken = req.session.user_id;
    if (userToken === undefined) {
     res.status(403);
     res.send("you are not logged in");
   } else if (userToken === urlDatabase[req.params.id].userID) {
-
     res.render('urls_shows', {tinyURL: req.params.id, URL: urlDatabase[req.params.id].fullURL, userObject:users[userToken].email});
   } else {
    res.status(403);
@@ -274,9 +264,5 @@ app.get('/urls/:id', function(req, res) {
 
 
 app.listen(PORT, () => {
-  console.log(`Tiny App listening on port ${PORT}!`)
+  console.log(`Tiny App listening on port ${PORT}!`);
 });
-
-console.log(bcrypt.hashSync("purple-monkey-dinosaur", 10))
-console.log(bcrypt.hashSync("dishwasher-funk", 10))
-console.log(bcrypt.hashSync("1234", 10))

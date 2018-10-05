@@ -13,11 +13,8 @@
 
  <ol>
     <% for (var key in urls) { %>
-        <li > <b>Full URL:</b> <%= urls[key].fullURL %> <br>
-
-
-         <b>Tiny URL:</b> <%= key %>  </li>
-        <!-- <form method="POST" action= <%= "/urls/" + key + "/delete"%>> -->
+        <li ><b>Tiny URL:</b> <a href= "http://localhost:8080/u/<%=key%>"> localhost:8080/u/<%=key%></a><br>
+        (<%= urls[key].fullURL %>)</li>
           <form style="display: inline;" method="POST" action= "/urls/<%=key%>/delete">
           <input type="submit" value="delete">
         </form>
