@@ -14,6 +14,8 @@
  <ol>
     <% for (var key in urls) { %>
         <li > <b>Full URL:</b> <%= urls[key].fullURL %> <br>
+
+
          <b>Tiny URL:</b> <%= key %>  </li>
         <!-- <form method="POST" action= <%= "/urls/" + key + "/delete"%>> -->
           <form style="display: inline;" method="POST" action= "/urls/<%=key%>/delete">

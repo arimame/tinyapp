@@ -67,7 +67,11 @@ const users = {
 }
 
 app.get("/", (req, res) => {
-  res.redirect("/login");
+  if (req.session.user_id === undefined ) {
+    res.redirect("/login");
+  } else {
+    res.redirect("/urls");
+  }
 });
 
 app.get("/urls.json", (req, res) => {
@@ -133,6 +137,9 @@ app.post("/logout", (req, res) => {
 
 //registration page render
 app.get("/register", (req, res) => {
+if (req.session.user_id !== undefined ) {
+    res.redirect("/urls");
+  }
 var userToken = req.session.user_id;
 let templateVars = {userObject: ""}; //need to fix this to .email???
   res.render("register", templateVars);
@@ -141,6 +148,9 @@ let templateVars = {userObject: ""}; //need to fix this to .email???
 
 //login page render
 app.get("/login", (req, res) => {
+  if (req.session.user_id !== undefined ) {
+    res.redirect("/urls");
+  }
 var userToken = req.session.user_id;
 let templateVars = {userObject: ""}; //need to fix this to .email???
   res.render("login", templateVars);
@@ -195,7 +205,7 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-app.post("/urls/new", (req, res) => {
+app.post("/urls", (req, res) => {
 var userToken = req.session.user_id;
 var tiny = generateRandomString()
 urlDatabase[tiny] = {};
@@ -235,7 +245,7 @@ app.get("/urls/:id/edit", (req, res) => {
 });
 
 //EDIT user can type new url and it will update it, and redirect to the homepage
-app.post("/urls/:id/change", (req, res) => { //changen URL
+app.post("/urls/:id", (req, res) => { //changen URL
   var userToken = req.session.user_id;
   if (userToken === urlDatabase[req.params.id].userID) {
     urlDatabase[req.params.id].fullURL = req.body.longURL;
@@ -250,7 +260,16 @@ app.post("/urls/:id/change", (req, res) => { //changen URL
 //displays the tiny url and full url when unique id is entered into
 app.get('/urls/:id', function(req, res) {
   var userToken = req.session.user_id;
-  res.render('urls_shows', {tinyURL: req.params.id, URL: urlDatabase[req.params.id].fullURL, userObject:users[userToken].email}); //need to fix this to .email
+   if (userToken === undefined) {
+    res.status(403);
+    res.send("you are not logged in");
+  } else if (userToken === urlDatabase[req.params.id].userID) {
+
+    res.render('urls_shows', {tinyURL: req.params.id, URL: urlDatabase[req.params.id].fullURL, userObject:users[userToken].email});
+  } else {
+   res.status(403);
+    res.send("this is not your url");
+  }
 });
 
 
